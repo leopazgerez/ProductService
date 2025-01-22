@@ -8,10 +8,12 @@ import com.example.productservice.repositories.ProductRepository;
 import com.example.productservice.services.ProductService;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class ProductServiceImpl implements ProductService {
     @Autowired
     ProductRepository productRepository;
@@ -30,9 +32,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO createProduct(ProductDTO productDTO) throws BadRequestException {
         Product productSaved;
-        if (productDTO.getName().isEmpty() | productDTO.getDescription().isEmpty() | productDTO.getPrice() == null | productDTO.getStock() == null) {
-            throw new BadRequestException("One or more attribute does not match with the request body");
-        }
         try {
             productSaved = productRepository.save(productMapper.dtoToEntity(productDTO));
         } catch (Exception e) {
@@ -40,6 +39,19 @@ public class ProductServiceImpl implements ProductService {
         }
         return productMapper.entityToDTO(productSaved);
     }
+//    @Override
+//    public ProductDTO createProduct(ProductDTO productDTO) throws BadRequestException {
+//        Product productSaved;
+//        if (productDTO.getName().isEmpty() | productDTO.getDescription().isEmpty() | productDTO.getPrice() == null | productDTO.getStock() == null) {
+//            throw new BadRequestException("One or more attribute does not match with the request body");
+//        }
+//        try {
+//            productSaved = productRepository.save(productMapper.dtoToEntity(productDTO));
+//        } catch (Exception e) {
+//            throw new BadRequestException(e.getMessage());
+//        }
+//        return productMapper.entityToDTO(productSaved);
+//    }
 
     @Override
     public ProductDTO updateProduct(ProductDTO productDTO, Long id) throws BadRequestException {
