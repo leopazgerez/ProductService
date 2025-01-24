@@ -1,5 +1,6 @@
 package com.example.productservice.controllers;
 
+import com.example.productservice.dtos.ItemOrder;
 import com.example.productservice.dtos.ProductDTO;
 import com.example.productservice.services.ProductService;
 import jakarta.validation.Valid;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/products")
@@ -19,6 +22,11 @@ public class ProductController {
     @GetMapping("/all")
     ResponseEntity<?> getAllProduct() {
         return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @PostMapping("/existStock")
+    ResponseEntity<?> existStock(@RequestBody Set<ItemOrder> itemsOrder) {
+        return ResponseEntity.ok(productService.existStockOfProducts(itemsOrder));
     }
 
     @Operation(summary = "Retrieve user by ID", description = "Update product.")

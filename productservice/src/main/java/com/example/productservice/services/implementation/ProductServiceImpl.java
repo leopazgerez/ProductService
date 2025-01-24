@@ -1,6 +1,7 @@
 package com.example.productservice.services.implementation;
 
 import com.example.productservice.Mappers.ProductMapper;
+import com.example.productservice.dtos.ItemOrder;
 import com.example.productservice.dtos.ProductDTO;
 import com.example.productservice.exceptions.ProductDoesNotExistException;
 import com.example.productservice.models.Product;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,4 +70,25 @@ public class ProductServiceImpl implements ProductService {
         }
         return productMapper.entityToDTO(productSaved);
     }
+
+
+    @Override
+    public boolean existStockOfProducts(Set<ItemOrder> itemsOrder) {
+        boolean result = false;
+        for (ItemOrder order : itemsOrder) {
+            if (productRepository.existsById(order.id())) {
+                Product product = productRepository.findById(order.id()).orElseThrow(() -> new ProductDoesNotExistException("Product does not exist"));
+                if (product.getStock() >= order.quantity()) {
+                    result = true;
+                } else {
+                    throw new ProductDoesNotExistException("Stock is not enough");
+                }
+            } else {
+                throw new ProductDoesNotExistException("Product does not exist");
+            }
+        }
+        return result;
+    }
+
+
 }
