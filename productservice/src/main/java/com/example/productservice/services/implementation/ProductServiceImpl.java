@@ -41,19 +41,6 @@ public class ProductServiceImpl implements ProductService {
         }
         return productMapper.entityToDTO(productSaved);
     }
-//    @Override
-//    public ProductDTO createProduct(ProductDTO productDTO) throws BadRequestException {
-//        Product productSaved;
-//        if (productDTO.getName().isEmpty() | productDTO.getDescription().isEmpty() | productDTO.getPrice() == null | productDTO.getStock() == null) {
-//            throw new BadRequestException("One or more attribute does not match with the request body");
-//        }
-//        try {
-//            productSaved = productRepository.save(productMapper.dtoToEntity(productDTO));
-//        } catch (Exception e) {
-//            throw new BadRequestException(e.getMessage());
-//        }
-//        return productMapper.entityToDTO(productSaved);
-//    }
 
     @Override
     public ProductDTO updateProduct(ProductDTO productDTO, Long id) throws BadRequestException {
@@ -69,6 +56,21 @@ public class ProductServiceImpl implements ProductService {
             }
         }
         return productMapper.entityToDTO(productSaved);
+    }
+
+    @Override
+    public void updateStock(Set<ItemOrder> itemsOrder) throws BadRequestException {
+        Product productFound;
+        Product productSaved = new Product();
+        for (ItemOrder item : itemsOrder) {
+            productFound = productRepository.findById(item.id()).orElseThrow(() -> new ProductDoesNotExistException("Product does not exist"));
+            if (productFound.getStock() >= item.quantity()) {
+                productFound.setStock(productFound.getStock() - item.quantity());
+                updateProduct(productMapper.entityToDTO(productFound), productFound.getId());
+            } else {
+                throw new ProductDoesNotExistException("Stock is not enough");
+            }
+        }
     }
 
 

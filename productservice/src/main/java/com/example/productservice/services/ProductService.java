@@ -15,4 +15,5 @@ public interface ProductService {
     ProductDTO updateProduct(ProductDTO productDTO, Long id) throws BadRequestException;
 
     boolean existStockOfProducts(Set<ItemOrder> itemOrders);
+    public void updateStock(Set<ItemOrder> itemsOrder) throws BadRequestException;
 }

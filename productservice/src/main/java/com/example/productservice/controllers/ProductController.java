@@ -36,10 +36,16 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateProduct(productDTO, id));
     }
 
+    @PutMapping("/updateStock")
+    ResponseEntity<?> updateStock(@RequestBody Set<ItemOrder> itemsOrder) throws BadRequestException {
+        productService.updateStock(itemsOrder);
+        return ResponseEntity.ok("Stock updated successfully");
+    }
+
     @Operation(summary = "Retrieve user by ID", description = "Create product.")
     @PostMapping("/create")
         //    agregar @Valid luego de testear
-    ResponseEntity<?> createProduct( @RequestBody @Valid ProductDTO productDTO) throws BadRequestException {
+    ResponseEntity<?> createProduct(@RequestBody @Valid ProductDTO productDTO) throws BadRequestException {
         return ResponseEntity.ok(productService.createProduct(productDTO));
     }
 
