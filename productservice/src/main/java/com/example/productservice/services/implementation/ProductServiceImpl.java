@@ -3,7 +3,7 @@ package com.example.productservice.services.implementation;
 import com.example.productservice.Mappers.ProductMapper;
 import com.example.productservice.dtos.ItemOrder;
 import com.example.productservice.dtos.ProductDTO;
-import com.example.productservice.exceptions.ProductDoesNotExistException;
+import com.example.productservice.exceptions.ProductException;
 import com.example.productservice.models.Product;
 import com.example.productservice.repositories.ProductRepository;
 import com.example.productservice.services.ProductService;
@@ -47,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
         Product productFound;
         Product productSaved = new Product();
         if (productRepository.existsById(id)) {
-            productFound = productRepository.findById(id).orElseThrow(() -> new ProductDoesNotExistException("Product does not exist"));
+            productFound = productRepository.findById(id).orElseThrow(() -> new ProductException("Product does not exist"));
             productFound.setStock(productFound.getStock());
             try {
                 productSaved = productRepository.save(productFound);
@@ -62,15 +62,24 @@ public class ProductServiceImpl implements ProductService {
     public void updateStock(Set<ItemOrder> itemsOrder) throws BadRequestException {
         Product productFound;
         Product productSaved = new Product();
+        validateStockFromRequest(itemsOrder);
         for (ItemOrder item : itemsOrder) {
-            productFound = productRepository.findById(item.id()).orElseThrow(() -> new ProductDoesNotExistException("Product does not exist"));
+            productFound = productRepository.findById(item.id()).orElseThrow(() -> new ProductException("Product does not exist"));
             if (productFound.getStock() >= item.quantity()) {
                 productFound.setStock(productFound.getStock() - item.quantity());
                 updateProduct(productMapper.entityToDTO(productFound), productFound.getId());
             } else {
-                throw new ProductDoesNotExistException("Stock is not enough");
+                throw new ProductException("Stock is not enough");
             }
         }
+    }
+
+    private void validateStockFromRequest(Set<ItemOrder> itemsOrder) {
+        itemsOrder.forEach(item -> {
+            if (item.quantity() == null) {
+                throw new ProductException("Item must have quantity greater than 0");
+            }
+        });
     }
 
 
@@ -79,14 +88,14 @@ public class ProductServiceImpl implements ProductService {
         boolean result = false;
         for (ItemOrder order : itemsOrder) {
             if (productRepository.existsById(order.id())) {
-                Product product = productRepository.findById(order.id()).orElseThrow(() -> new ProductDoesNotExistException("Product does not exist"));
+                Product product = productRepository.findById(order.id()).orElseThrow(() -> new ProductException("Product does not exist"));
                 if (product.getStock() >= order.quantity()) {
                     result = true;
                 } else {
-                    throw new ProductDoesNotExistException("Stock is not enough");
+                    throw new ProductException("Stock is not enough");
                 }
             } else {
-                throw new ProductDoesNotExistException("Product does not exist");
+                throw new ProductException("Product does not exist");
             }
         }
         return result;

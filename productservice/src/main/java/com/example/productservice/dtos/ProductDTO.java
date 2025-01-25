@@ -8,13 +8,13 @@ import jakarta.validation.constraints.NotNull;
 //@NotBlank: Similar a @NotEmpty pero aplica solo a cadenas, verificando que no sea null y no esté en blanco (sin espacios).
 public class ProductDTO {
     private Long id;
-    @NotBlank(message = "The name cannot be empty")
+    @NotBlank(message = "name no puede esstar vacio o nulo")
     private String name;
-    @NotBlank(message = "The description cannot be empty")
+    @NotBlank(message = "description no puede esstar vacio o nulo")
     private String description;
-    @NotNull(message = "The price cannot be empty")
+    @NotNull(message = "price no puede esstar vacio o nulo")
     private Double price;
-    @NotNull(message = "The stock cannot be empty")
+    @NotNull(message = "stock no puede esstar vacio o nulo")
     private Integer stock;
 
     public ProductDTO() {

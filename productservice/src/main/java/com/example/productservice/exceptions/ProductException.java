@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class ProductDoesNotExistException extends RuntimeException {
-    public ProductDoesNotExistException(String message) {
+public class ProductException extends RuntimeException {
+    public ProductException(String message) {
         super(message);
     }
 }

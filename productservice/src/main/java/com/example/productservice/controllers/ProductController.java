@@ -31,22 +31,20 @@ public class ProductController {
 
     @Operation(summary = "Update product by Id", description = "Update product.")
     @PutMapping("/update")
-//    agregar @Valid luego de testear
-    ResponseEntity<?> updateProduct(@RequestBody ProductDTO productDTO, @PathVariable Long id) throws BadRequestException {
+    ResponseEntity<?> updateProduct(@Valid @RequestBody ProductDTO productDTO, @PathVariable Long id) throws BadRequestException {
         return ResponseEntity.ok(productService.updateProduct(productDTO, id));
     }
 
     @Operation(summary = "Update stock", description = "Update stocks of products sent by body")
     @PutMapping("/updateStock")
-    ResponseEntity<?> updateStock(@RequestBody Set<ItemOrder> itemsOrder) throws BadRequestException {
+    ResponseEntity<?> updateStock(@Valid @RequestBody Set<ItemOrder> itemsOrder) throws BadRequestException {
         productService.updateStock(itemsOrder);
         return ResponseEntity.ok("Stock updated successfully");
     }
 
     @Operation(summary = "Create product", description = "Create product.")
     @PostMapping("/create")
-        //    agregar @Valid luego de testear
-    ResponseEntity<?> createProduct(@RequestBody @Valid ProductDTO productDTO) throws BadRequestException {
+    ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO productDTO) throws BadRequestException {
         return ResponseEntity.ok(productService.createProduct(productDTO));
     }
 

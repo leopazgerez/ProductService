@@ -1,4 +1,7 @@
 package com.example.productservice.dtos;
 
-public record ItemOrder(Long id, Integer quantity) {
+import jakarta.validation.constraints.NotNull;
+
+public record ItemOrder(@NotNull(message = "ProductId es requerido") Long id,
+                        @NotNull(message = "Quantity es requerido") Integer quantity) {
 }
