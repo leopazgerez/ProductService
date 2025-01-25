@@ -18,7 +18,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @Operation(summary = "Retrieve user by ID", description = "Fetches all products.")
+    @Operation(summary = "Retrieve all product", description = "Fetches all products.")
     @GetMapping("/all")
     ResponseEntity<?> getAllProduct() {
         return ResponseEntity.ok(productService.getAllProducts());
@@ -29,20 +29,21 @@ public class ProductController {
         return ResponseEntity.ok(productService.existStockOfProducts(itemsOrder));
     }
 
-    @Operation(summary = "Retrieve user by ID", description = "Update product.")
+    @Operation(summary = "Update product by Id", description = "Update product.")
     @PutMapping("/update")
 //    agregar @Valid luego de testear
     ResponseEntity<?> updateProduct(@RequestBody ProductDTO productDTO, @PathVariable Long id) throws BadRequestException {
         return ResponseEntity.ok(productService.updateProduct(productDTO, id));
     }
 
+    @Operation(summary = "Update stock", description = "Update stocks of products sent by body")
     @PutMapping("/updateStock")
     ResponseEntity<?> updateStock(@RequestBody Set<ItemOrder> itemsOrder) throws BadRequestException {
         productService.updateStock(itemsOrder);
         return ResponseEntity.ok("Stock updated successfully");
     }
 
-    @Operation(summary = "Retrieve user by ID", description = "Create product.")
+    @Operation(summary = "Create product", description = "Create product.")
     @PostMapping("/create")
         //    agregar @Valid luego de testear
     ResponseEntity<?> createProduct(@RequestBody @Valid ProductDTO productDTO) throws BadRequestException {
