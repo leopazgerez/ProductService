@@ -1,6 +1,7 @@
 package com.example.productservice.controllers;
 
-import com.example.productservice.dtos.ItemOrder;
+import com.example.productservice.dtos.OrderDTO;
+import com.example.productservice.dtos.OrderItemDTO;
 import com.example.productservice.dtos.ProductDTO;
 import com.example.productservice.services.ProductService;
 import jakarta.validation.Valid;
@@ -25,7 +26,7 @@ public class ProductController {
     }
 
     @PostMapping("/existStock")
-    ResponseEntity<?> existStock(@RequestBody Set<ItemOrder> itemsOrder) {
+    ResponseEntity<?> existStock(@RequestBody Set<OrderItemDTO> itemsOrder) {
         return ResponseEntity.ok(productService.existStockOfProducts(itemsOrder));
     }
 
@@ -37,8 +38,8 @@ public class ProductController {
 
     @Operation(summary = "Update stock", description = "Update stocks of products sent by body")
     @PutMapping("/updateStock")
-    ResponseEntity<?> updateStock(@Valid @RequestBody Set<ItemOrder> itemsOrder) throws BadRequestException {
-        productService.updateStock(itemsOrder);
+    ResponseEntity<?> updateStock(@Valid @RequestBody OrderDTO orderDTO) throws BadRequestException {
+        productService.updateStock(orderDTO);
         return ResponseEntity.ok("Stock updated successfully");
     }
 

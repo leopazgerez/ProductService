@@ -1,5 +1,6 @@
 package com.example.productservice.models;
 
+import com.example.productservice.exceptions.InsufficientStockException;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -51,5 +52,12 @@ public class Product {
 
     public void setStock(Integer stock) {
         this.stock = stock;
+    }
+
+    public void updateStock(int amount) {
+        if (this.stock < amount) {
+            throw new InsufficientStockException("Stock insuficiente para el producto " + this.name);
+        }
+        this.stock -= amount;
     }
 }

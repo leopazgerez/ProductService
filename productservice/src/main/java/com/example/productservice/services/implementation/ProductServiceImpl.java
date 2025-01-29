@@ -1,13 +1,19 @@
 package com.example.productservice.services.implementation;
 
 import com.example.productservice.Mappers.ProductMapper;
-import com.example.productservice.dtos.ItemOrder;
+import com.example.productservice.Utils.RabbitValues;
+import com.example.productservice.dtos.OrderDTO;
+import com.example.productservice.dtos.OrderItemDTO;
 import com.example.productservice.dtos.ProductDTO;
+import com.example.productservice.exceptions.InsufficientStockException;
 import com.example.productservice.exceptions.ProductException;
 import com.example.productservice.models.Product;
 import com.example.productservice.repositories.ProductRepository;
 import com.example.productservice.services.ProductService;
+import jakarta.transaction.Transactional;
 import org.apache.coyote.BadRequestException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +24,13 @@ import java.util.stream.Collectors;
 @Service
 public class ProductServiceImpl implements ProductService {
     @Autowired
-    ProductRepository productRepository;
+    private ProductRepository productRepository;
     @Autowired
-    ProductMapper productMapper;
+    private ProductMapper productMapper;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RabbitValues rabbitValues;
 
     @Override
     public List<ProductDTO> getAllProducts() {
@@ -59,36 +69,26 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void updateStock(Set<ItemOrder> itemsOrder) throws BadRequestException {
-        Product productFound;
-        Product productSaved = new Product();
-        validateStockFromRequest(itemsOrder);
-        for (ItemOrder item : itemsOrder) {
-            productFound = productRepository.findById(item.id()).orElseThrow(() -> new ProductException("Product does not exist"));
-            if (productFound.getStock() >= item.quantity()) {
-                productFound.setStock(productFound.getStock() - item.quantity());
-                updateProduct(productMapper.entityToDTO(productFound), productFound.getId());
-            } else {
-                throw new ProductException("Stock is not enough");
-            }
+    @Transactional(rollbackOn = InsufficientStockException.class)
+//    Para poder acceder a una propiedad de un @Component se antepone "#"
+    @RabbitListener(queues = "#{@rabbitValues.updateStockQueue}")
+    public void updateStock(OrderDTO orderDTO) throws BadRequestException {
+        for (OrderItemDTO item : orderDTO.products()) {
+            Product productFound = productRepository.findById(item.productId())
+                    .orElseThrow(() -> new ProductException("Product not found"));
+//            Actualizo en caso de poder a nivel entidad sino lanzo excepción que desencadena el rolleback
+            productFound.updateStock(item.quantity());
+            productRepository.save(productFound);
         }
+            rabbitTemplate.convertAndSend(rabbitValues.getExchange(), rabbitValues.getUpdateOrderRoutingKey(), orderDTO.id());
     }
-
-    private void validateStockFromRequest(Set<ItemOrder> itemsOrder) {
-        itemsOrder.forEach(item -> {
-            if (item.quantity() == null) {
-                throw new ProductException("Item must have quantity greater than 0");
-            }
-        });
-    }
-
 
     @Override
-    public boolean existStockOfProducts(Set<ItemOrder> itemsOrder) {
+    public boolean existStockOfProducts(Set<OrderItemDTO> itemsOrder) {
         boolean result = false;
-        for (ItemOrder order : itemsOrder) {
-            if (productRepository.existsById(order.id())) {
-                Product product = productRepository.findById(order.id()).orElseThrow(() -> new ProductException("Product does not exist"));
+        for (OrderItemDTO order : itemsOrder) {
+            if (productRepository.existsById(order.productId())) {
+                Product product = productRepository.findById(order.productId()).orElseThrow(() -> new ProductException("Product does not exist"));
                 if (product.getStock() >= order.quantity()) {
                     result = true;
                 } else {

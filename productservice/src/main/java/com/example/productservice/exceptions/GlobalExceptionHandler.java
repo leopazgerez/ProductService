@@ -18,6 +18,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(exception.getStatusCode()).body(mapMethodArgumentNotValidExceptionMessage(exception.getDetailMessageArguments()));
     }
 
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<?> handleConstraintValidationException(InsufficientStockException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
