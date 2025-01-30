@@ -25,6 +25,12 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    @Operation(summary = "Retrieve products of an Order", description = "Fetches products of an order.")
+    @PostMapping("/order/all")
+    ResponseEntity<?> getOrderProducts(@RequestBody Set<OrderItemDTO> orderItems) {
+        return ResponseEntity.ok(productService.getOrderProducts(orderItems));
+    }
+
     @PostMapping("/existStock")
     ResponseEntity<?> existStock(@RequestBody Set<OrderItemDTO> itemsOrder) {
         return ResponseEntity.ok(productService.existStockOfProducts(itemsOrder));

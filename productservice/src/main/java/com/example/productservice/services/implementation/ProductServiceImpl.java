@@ -17,6 +17,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,6 +70,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackOn = Exception.class)
+    public Set<ProductDTO> getOrderProducts(Set<OrderItemDTO> orderItems) {
+        final Set<Long> productsIds = orderItems.stream().map(OrderItemDTO::productId).collect(Collectors.toSet());
+        return productRepository
+                .findAllById(productsIds)
+                .stream()
+                .map(productMapper::entityToDTO)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     @Transactional(rollbackOn = InsufficientStockException.class)
 //    Para poder acceder a una propiedad de un @Component se antepone "#"
     @RabbitListener(queues = "#{@rabbitValues.updateStockQueue}")
@@ -80,7 +92,7 @@ public class ProductServiceImpl implements ProductService {
             productFound.updateStock(item.quantity());
             productRepository.save(productFound);
         }
-            rabbitTemplate.convertAndSend(rabbitValues.getExchange(), rabbitValues.getUpdateOrderRoutingKey(), orderDTO.id());
+        rabbitTemplate.convertAndSend(rabbitValues.getExchange(), rabbitValues.getUpdateOrderRoutingKey(), orderDTO.id());
     }
 
     @Override
@@ -100,6 +112,5 @@ public class ProductServiceImpl implements ProductService {
         }
         return result;
     }
-
 
 }

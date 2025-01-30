@@ -1,4 +1,5 @@
 package com.example.productservice.services;
+
 import com.example.productservice.dtos.OrderDTO;
 import com.example.productservice.dtos.OrderItemDTO;
 import com.example.productservice.dtos.ProductDTO;
@@ -13,6 +14,8 @@ public interface ProductService {
     ProductDTO createProduct(ProductDTO productDTO) throws BadRequestException;
 
     ProductDTO updateProduct(ProductDTO productDTO, Long id) throws BadRequestException;
+
+    Set<ProductDTO> getOrderProducts(Set<OrderItemDTO> orderItems);
 
     boolean existStockOfProducts(Set<OrderItemDTO> itemOrders);
 
