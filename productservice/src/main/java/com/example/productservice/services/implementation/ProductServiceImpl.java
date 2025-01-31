@@ -12,18 +12,21 @@ import com.example.productservice.repositories.ProductRepository;
 import com.example.productservice.services.ProductService;
 import jakarta.transaction.Transactional;
 import org.apache.coyote.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
     @Autowired
     private ProductRepository productRepository;
     @Autowired
@@ -48,12 +51,14 @@ public class ProductServiceImpl implements ProductService {
         try {
             productSaved = productRepository.save(productMapper.dtoToEntity(productDTO));
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new BadRequestException(e.getMessage());
         }
         return productMapper.entityToDTO(productSaved);
     }
 
     @Override
+    @Transactional
     public ProductDTO updateProduct(ProductDTO productDTO, Long id) throws BadRequestException {
         Product productFound;
         Product productSaved = new Product();
@@ -63,6 +68,8 @@ public class ProductServiceImpl implements ProductService {
             try {
                 productSaved = productRepository.save(productFound);
             } catch (Exception e) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                log.error(e.getMessage(), e);
                 throw new BadRequestException(e.getMessage());
             }
         }
@@ -85,14 +92,19 @@ public class ProductServiceImpl implements ProductService {
 //    Para poder acceder a una propiedad de un @Component se antepone "#"
     @RabbitListener(queues = "#{@rabbitValues.updateStockQueue}")
     public void updateStock(OrderDTO orderDTO) throws BadRequestException {
-        for (OrderItemDTO item : orderDTO.products()) {
-            Product productFound = productRepository.findById(item.productId())
-                    .orElseThrow(() -> new ProductException("Product not found"));
+        try {
+            for (OrderItemDTO item : orderDTO.products()) {
+                Product productFound = productRepository.findById(item.productId())
+                        .orElseThrow(() -> new ProductException("Product not found"));
 //            Actualizo en caso de poder a nivel entidad sino lanzo excepción que desencadena el rolleback
-            productFound.updateStock(item.quantity());
-            productRepository.save(productFound);
+                productFound.updateStock(item.quantity());
+                productRepository.save(productFound);
+            }
+            rabbitTemplate.convertAndSend(rabbitValues.getExchange(), rabbitValues.getUpdateOrderRoutingKey(), orderDTO.id());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw e;
         }
-        rabbitTemplate.convertAndSend(rabbitValues.getExchange(), rabbitValues.getUpdateOrderRoutingKey(), orderDTO.id());
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.example.productservice.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,19 +14,23 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleConstraintValidationException(MethodArgumentNotValidException exception) {
+        log.error(exception.getMessage(), exception);
         return ResponseEntity.status(exception.getStatusCode()).body(mapMethodArgumentNotValidExceptionMessage(exception.getDetailMessageArguments()));
     }
 
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<?> handleConstraintValidationException(InsufficientStockException exception) {
+        log.error(exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
+        log.error(exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 
